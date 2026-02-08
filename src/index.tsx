@@ -1,74 +1,51 @@
-import { Action, ActionPanel, Detail, Icon, Image, Keyboard, List } from "@raycast/api";
+import { Action, Icon, List } from "@raycast/api";
+import { useCachedState, useLocalStorage } from "@raycast/utils";
+import { useCallback, useState } from "react";
 import { useSearch } from "./hooks/useSearch";
-import { useState } from "react";
 import { VolumeItem } from "./types/google-books.dt";
-
-const iconToEmojiMap = new Map<number, string>([
-  [0, "📘"],
-  [1, "📕"],
-  [2, "📗"],
-  [3, "📓"],
-  [4, "📔"],
-  [5, "📙"],
-]);
-
-function getIcon(index: number) {
-  return iconToEmojiMap.get(index % 5);
-}
-
-function getAccessoryTitle(item: VolumeItem) {
-  return (
-    (item?.volumeInfo?.averageRating ? "  ⭐  " + item.volumeInfo.averageRating + "/5" : "  ⭐  N/A") +
-    (item.volumeInfo?.pageCount ? "  📄  " + item.volumeInfo.pageCount : "  📄  N/A")
-  );
-}
-
-function convertInfoToMarkdown(item: VolumeItem) {
-  return (
-    "# " +
-    item.volumeInfo?.title +
-    "\n\n*" +
-    (item.volumeInfo?.authors ? item.volumeInfo?.authors?.join(", ") : "") +
-    "*\n\n ![thumbnail](" +
-    (item.volumeInfo?.imageLinks?.thumbnail ? item.volumeInfo?.imageLinks?.thumbnail.replace("http", "https") : "") +
-    ") \n\n**" +
-    (item.volumeInfo?.subtitle ? item.volumeInfo?.subtitle : "") +
-    "**\n\n" +
-    // Chunk long text into paragraphs
-    (item.volumeInfo?.description ? item.volumeInfo?.description?.replace(/(.*?\. ){3}/g, "$&\n\n") : "")
-  );
-}
-
-function getMaskedImage(item: VolumeItem | undefined, catIndex: number) {
-  return item?.volumeInfo?.imageLinks?.thumbnail
-    ? {
-        source: item.volumeInfo.imageLinks.thumbnail.replace("http", "https"),
-        mask: Image.Mask.RoundedRectangle,
-      }
-    : getIcon(catIndex);
-}
-
-function BookDetail({ item }: { item: VolumeItem }) {
-  return (
-    <Detail
-      actions={
-        <ActionPanel>
-          <Action.OpenInBrowser url={item.volumeInfo.infoLink} />
-          <Action.CopyToClipboard title="Copy URL to Clipboard" content={item.volumeInfo.infoLink} />
-        </ActionPanel>
-      }
-      navigationTitle={item.volumeInfo.title}
-      markdown={convertInfoToMarkdown(item)}
-    />
-  );
-}
+import { bookCount } from "./utils/books";
+import { BookListItem } from "./views/BookListItem";
+import { CategorizedBookGrid, FlatBookGrid } from "./views/BookGrid";
+import type { ViewMode } from "./views/BookGrid";
 
 export default function SearchGoogleBooks() {
+  const [showDetail, setShowDetail] = useCachedState("show-detail", true);
+  const [viewMode, setViewMode] = useCachedState<ViewMode>("view-mode", "list");
+  const {
+    value: lastSearch,
+    setValue: setLastSearch,
+    isLoading: isLoadingStorage,
+  } = useLocalStorage<string>("lastSearch", "");
+  const {
+    value: lastFilter,
+    setValue: setLastFilter,
+  } = useLocalStorage<string>("lastFilter", "");
   const [searchText, setSearchText] = useState<string>();
-  const { items, loading } = useSearch(searchText);
-  const [filter, setFilter] = useState("");
+  const { items, loading } = useSearch(searchText ?? lastSearch);
+  const [filter, setFilter] = useState<string | undefined>(undefined);
 
-  const categorisedItems =
+  const activeFilter = filter ?? lastFilter ?? "";
+  const isLoading = loading || isLoadingStorage;
+
+  const handleSearchTextChange = useCallback(
+    (text: string) => {
+      setSearchText(text);
+      if (text) {
+        setLastSearch(text);
+      }
+    },
+    [setLastSearch],
+  );
+
+  const handleFilterChange = useCallback(
+    (value: string) => {
+      setFilter(value);
+      setLastFilter(value);
+    },
+    [setLastFilter],
+  );
+
+  const categorizedItems =
     items.reduce((acc: Record<string, VolumeItem[]>, item: VolumeItem) => {
       const category = item.volumeInfo?.categories ? item.volumeInfo?.categories[0] : "Other";
       if (!acc[category]) {
@@ -78,52 +55,105 @@ export default function SearchGoogleBooks() {
       return acc;
     }, {}) ?? {};
 
+  const filteredCategorizedItems = Object.fromEntries(
+    Object.entries(categorizedItems).filter(([category]) => !activeFilter || category === activeFilter),
+  );
+
+  const totalCount = items.length;
+
+  const gridActions = (
+    <>
+      {viewMode !== "list" && (
+        <Action
+          icon={Icon.List}
+          title="View Book List"
+          shortcut={{ modifiers: ["cmd", "shift"], key: "l" }}
+          onAction={() => setViewMode("list")}
+        />
+      )}
+      {viewMode !== "categorized-grid" && (
+        <Action
+          icon={Icon.AppWindowGrid3x3}
+          title="Show Book Covers (Sorted)"
+          shortcut={{ modifiers: ["cmd", "shift"], key: "g" }}
+          onAction={() => setViewMode("categorized-grid")}
+        />
+      )}
+      {viewMode !== "grid" && (
+        <Action
+          icon={Icon.AppWindowGrid3x3}
+          title="Show Book Covers"
+          shortcut={{ modifiers: ["cmd", "shift"], key: "f" }}
+          onAction={() => setViewMode("grid")}
+        />
+      )}
+    </>
+  );
+
+  if (viewMode === "categorized-grid") {
+    return (
+      <CategorizedBookGrid
+        categorizedItems={categorizedItems}
+        filteredCategorizedItems={filteredCategorizedItems}
+        totalCount={totalCount}
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        isLoading={isLoading}
+        gridActions={gridActions}
+      />
+    );
+  }
+
+  if (viewMode === "grid") {
+    return (
+      <FlatBookGrid
+        categorizedItems={categorizedItems}
+        filteredCategorizedItems={filteredCategorizedItems}
+        totalCount={totalCount}
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        isLoading={isLoading}
+        gridActions={gridActions}
+      />
+    );
+  }
+
   return (
     <List
       throttle
+      isShowingDetail={showDetail}
       searchBarPlaceholder="Search Google Books by keywords..."
       navigationTitle="Search Google Books"
-      isLoading={loading}
-      onSearchTextChange={setSearchText}
+      isLoading={isLoading}
+      onSearchTextChange={handleSearchTextChange}
+      searchText={searchText ?? lastSearch ?? ""}
       searchBarAccessory={
-        <List.Dropdown tooltip="Category" onChange={setFilter}>
-          <List.Dropdown.Item title="All" value="" />
-          {Object.keys(categorisedItems).map((category) => (
-            <List.Dropdown.Item key={category} title={category} value={category} />
+        <List.Dropdown tooltip="Category" value={activeFilter} onChange={handleFilterChange}>
+          <List.Dropdown.Item title={`All (${totalCount})`} value="" />
+          {Object.keys(categorizedItems).sort((a, b) => a.localeCompare(b)).map((category) => (
+            <List.Dropdown.Item key={category} title={`${category} (${categorizedItems[category].length})`} value={category} />
           ))}
         </List.Dropdown>
       }
     >
-      {Object.keys(categorisedItems)
-        .filter((category) => !filter || category === filter)
-        .map((category, catIndex) => (
-          <List.Section
-            key={category}
-            title={category}
-            subtitle={`📚 Total Books: ${categorisedItems[category].length}`}
-          >
-            {categorisedItems[category].map((item) => (
-              <List.Item
-                key={item.id}
-                icon={getMaskedImage(item, catIndex)}
-                title={item.volumeInfo.title}
-                subtitle={item.volumeInfo?.authors ? item.volumeInfo.authors[0] : "Various Authors"}
-                accessories={[{ text: getAccessoryTitle(item) }]}
-                actions={
-                  <ActionPanel>
-                    <Action.Push icon={Icon.List} title="Show Book Details" target={<BookDetail item={item} />} />
-                    <Action.OpenInBrowser url={item.volumeInfo.infoLink} />
-                    <Action.CopyToClipboard
-                      shortcut={Keyboard.Shortcut.Common.Copy}
-                      title="Copy URL to Clipboard"
-                      content={item.volumeInfo.infoLink}
-                    />
-                  </ActionPanel>
-                }
-              />
-            ))}
-          </List.Section>
-        ))}
+      {Object.keys(filteredCategorizedItems).map((category, catIndex) => (
+        <List.Section
+          key={category}
+          title={category}
+          subtitle={bookCount(filteredCategorizedItems[category].length)}
+        >
+          {filteredCategorizedItems[category].map((item) => (
+            <BookListItem
+              key={item.id}
+              item={item}
+              catIndex={catIndex}
+              showDetail={showDetail}
+              setShowDetail={setShowDetail}
+              gridActions={gridActions}
+            />
+          ))}
+        </List.Section>
+      ))}
     </List>
   );
 }

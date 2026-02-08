@@ -1,17 +1,64 @@
 import type { GoogleBooksResponse, VolumeItem } from "../types/google-books.dt";
 import { useFetch } from "@raycast/utils";
+import { getPreferenceValues, showToast, Toast } from "@raycast/api";
+import { useRef, useState, useEffect } from "react";
+
+const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
+const GOOGLE_CLOUD_CREDENTIALS_URL = "https://console.cloud.google.com/apis/credentials";
+const MAX_RESULTS = 40;
 
 type UseSearchReturn = { items: VolumeItem[]; loading: boolean };
 
+function useDebouncedValue<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timerRef.current);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+function buildSearchUrl(query: string): string {
+  const { apiKey } = getPreferenceValues<{ apiKey?: string }>();
+  const url = new URL(GOOGLE_BOOKS_API_URL);
+  url.searchParams.set("q", query);
+  url.searchParams.set("maxResults", MAX_RESULTS.toString());
+  if (apiKey) {
+    url.searchParams.set("key", apiKey);
+  }
+  return url.toString();
+}
+
 function useSearch(query: string | undefined): UseSearchReturn {
-  const { isLoading, data } = useFetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=40`, {
+  const debouncedQuery = useDebouncedValue(query, 300);
+
+  const { isLoading, data } = useFetch(buildSearchUrl(debouncedQuery ?? ""), {
     mapResult(result: GoogleBooksResponse) {
       return {
-        data: result.items,
+        data: (result.items ?? []).filter((item) => item.volumeInfo?.title),
       };
     },
     initialData: [],
-    execute: !!query,
+    keepPreviousData: true,
+    execute: !!debouncedQuery,
+    async onError(error: Error) {
+      if (error.message.includes("Too Many Requests")) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Rate Limited",
+          message: "Set a Google Books API key in extension preferences to avoid this.",
+          primaryAction: {
+            title: "How to Get an API Key",
+            onAction: () => {
+              import("@raycast/api").then(({ open }) => open(GOOGLE_CLOUD_CREDENTIALS_URL));
+            },
+          },
+        });
+      }
+    },
   });
   return { loading: isLoading, items: data };
 }

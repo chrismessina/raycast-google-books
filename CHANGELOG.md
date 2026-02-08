@@ -1,5 +1,10 @@
 # Google Books Changelog
 
+## [Update Dependencies] - {PR_MERGE_DATE}
+
+- Update dependencies to latest versions
+- Fix rating limiting due to API changes
+
 ## [Modernize + Filter + Add CHANGELOG] - 2025-05-26
 
 - modernize: use latest Raycast config
