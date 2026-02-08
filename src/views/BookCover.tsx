@@ -1,13 +1,19 @@
-import { Action, ActionPanel, Detail, Icon, Keyboard, showInFinder, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, Detail, Icon, Keyboard, showInFinder, showToast, Toast } from "@raycast/api";
 import { VolumeItem } from "../types/google-books.dt";
 import { getLargeCover } from "../utils/books";
 import { writeFile } from "fs/promises";
-import { homedir } from "os";
+import { homedir, tmpdir } from "os";
 import { join } from "path";
+
+async function fetchCoverBuffer(url: string): Promise<Buffer> {
+  const response = await fetch(url);
+  return Buffer.from(await response.arrayBuffer());
+}
 
 export function BookCover({ item }: { item: VolumeItem }) {
   const cover = getLargeCover(item);
   const markdown = cover ? `# ![Cover](${cover})` : `# No cover available.`;
+  const safeName = (item.volumeInfo?.title ?? "cover").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 60);
 
   return (
     <Detail
@@ -22,9 +28,7 @@ export function BookCover({ item }: { item: VolumeItem }) {
                 title="Download Cover"
                 onAction={async () => {
                   try {
-                    const response = await fetch(cover);
-                    const buffer = Buffer.from(await response.arrayBuffer());
-                    const safeName = "cover".replace(/[^a-zA-Z0-9]/g, "_").substring(0, 60);
+                    const buffer = await fetchCoverBuffer(cover);
                     const filePath = join(homedir(), "Downloads", `${safeName}_cover.jpg`);
                     await writeFile(filePath, buffer);
                     const toast = await showToast({
@@ -45,8 +49,31 @@ export function BookCover({ item }: { item: VolumeItem }) {
                   }
                 }}
               />
-              <Action.CopyToClipboard
+              <Action
                 icon={Icon.Clipboard}
+                title="Copy Cover"
+                shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
+                onAction={async () => {
+                  try {
+                    const buffer = await fetchCoverBuffer(cover);
+                    const tempPath = join(tmpdir(), "raycast-google-books-cover.jpg");
+                    await writeFile(tempPath, buffer);
+                    await Clipboard.copy({ file: tempPath });
+                    await showToast({
+                      style: Toast.Style.Success,
+                      title: "Cover Copied to Clipboard",
+                    });
+                  } catch {
+                    await showToast({
+                      style: Toast.Style.Failure,
+                      title: "Copy Failed",
+                      message: "Could not copy the cover image.",
+                    });
+                  }
+                }}
+              />
+              <Action.CopyToClipboard
+                icon={Icon.Link}
                 title="Copy Cover URL"
                 content={cover}
                 shortcut={Keyboard.Shortcut.Common.Copy}

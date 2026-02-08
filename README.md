@@ -1,10 +1,31 @@
 # Google Books Search for Raycast
 
-<p align="center">
-    <img src="./assets/google-books.png" width="150" height="150" />
-</p>
-
 Extension for Raycast to search [Google Books](https://books.google.com).
+
+## Features
+
+- **Search** Google Books by keywords with debounced queries and result caching
+- **Detail Sidebar** — toggleable metadata panel in List view showing type, author, publisher, published date, pages, rating, language, maturity, price, eBook status, ISBN, categories, and links
+- **Multiple Views** — switch between List, Grid, and Categorized Grid views (persisted across sessions)
+- **Category Filter** — filter results by category in all views
+- **View Book Description** — full-page markdown view with title, subtitle, authors, and description
+- **View Book Cover** — full-page cover image with actions to download, copy image, or copy URL
+- **Clipboard Actions** — copy book link, author, or ISBN to clipboard
+- **Clear Search** — reset query, filter, and view mode in one action
+
+## Keyboard Shortcuts
+
+| Shortcut | Action                    |
+| -------- | ------------------------- |
+| `⌘ ⇧ ↩`  | Toggle Detail Sidebar     |
+| `⌘ ⇧ L`  | View Book List            |
+| `⌘ ⇧ G`  | Show Book Covers (Sorted) |
+| `⌘ ⇧ F`  | Show Book Covers          |
+| `⌘ ⇧ C`  | View / Copy Book Cover    |
+| `⌘ ⇧ A`  | Copy Author               |
+| `⌘ ⇧ I`  | Copy ISBN                 |
+| `⌘ ⇧ X`  | Clear Search              |
+| `⌘ C`    | Copy Link                 |
 
 ## Setup (Optional)
 

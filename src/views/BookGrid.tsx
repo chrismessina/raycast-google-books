@@ -1,133 +1,118 @@
-import { ActionPanel, Grid } from "@raycast/api";
+import { ActionPanel, Grid, Icon } from "@raycast/api";
 import { VolumeItem } from "../types/google-books.dt";
 import { bookCount, getGridCover } from "../utils/books";
 import { BookActionSections } from "../actions/BookActions";
 
 export type ViewMode = "list" | "grid" | "categorized-grid";
 
-interface GridProps {
+interface BookGridProps {
   categorizedItems: Record<string, VolumeItem[]>;
   filteredCategorizedItems: Record<string, VolumeItem[]>;
   totalCount: number;
   activeFilter: string;
   onFilterChange: (value: string) => void;
   isLoading: boolean;
-  gridActions: React.ReactNode;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  onClearSearch: () => void;
+  categorized: boolean;
 }
 
-function CategoryDropdown({
-  categorizedItems,
-  totalCount,
-  filter,
-  onFilterChange,
+function BookGridItem({
+  item,
+  viewMode,
+  onViewModeChange,
+  onClearSearch,
 }: {
-  categorizedItems: Record<string, VolumeItem[]>;
-  totalCount: number;
-  filter: string;
-  onFilterChange: (value: string) => void;
+  item: VolumeItem;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  onClearSearch: () => void;
 }) {
   return (
-    <Grid.Dropdown tooltip="Category" value={filter} onChange={onFilterChange}>
-      <Grid.Dropdown.Item title={`All (${totalCount})`} value="" />
-      {Object.keys(categorizedItems)
-        .sort((a, b) => a.localeCompare(b))
-        .map((category) => (
-          <Grid.Dropdown.Item
-            key={category}
-            title={`${category} (${categorizedItems[category].length})`}
-            value={category}
+    <Grid.Item
+      key={item.id}
+      content={getGridCover(item)}
+      title={item.volumeInfo.title}
+      subtitle={item.volumeInfo?.authors ? item.volumeInfo.authors[0] : "Various Authors"}
+      actions={
+        <ActionPanel>
+          <BookActionSections
+            item={item}
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+            onClearSearch={onClearSearch}
           />
-        ))}
-    </Grid.Dropdown>
+        </ActionPanel>
+      }
+    />
   );
 }
 
-export function CategorizedBookGrid({
+export function BookGrid({
   categorizedItems,
   filteredCategorizedItems,
   totalCount,
   activeFilter,
   onFilterChange,
   isLoading,
-  gridActions,
-}: GridProps) {
+  viewMode,
+  onViewModeChange,
+  onClearSearch,
+  categorized,
+}: BookGridProps) {
   return (
     <Grid
       columns={5}
       aspectRatio="2/3"
       fit={Grid.Fit.Fill}
-      navigationTitle="Book Covers (Sorted)"
+      navigationTitle={categorized ? "Book Covers (Sorted)" : "Book Covers"}
       isLoading={isLoading}
       searchBarAccessory={
-        <CategoryDropdown
-          categorizedItems={categorizedItems}
-          totalCount={totalCount}
-          filter={activeFilter}
-          onFilterChange={onFilterChange}
-        />
+        <Grid.Dropdown tooltip="Category" value={activeFilter} onChange={onFilterChange}>
+          <Grid.Dropdown.Item title={`All (${totalCount})`} value="" />
+          {Object.keys(categorizedItems)
+            .sort((a, b) => a.localeCompare(b))
+            .map((category) => (
+              <Grid.Dropdown.Item
+                key={category}
+                title={`${category} (${categorizedItems[category].length})`}
+                value={category}
+              />
+            ))}
+        </Grid.Dropdown>
       }
     >
-      {Object.keys(filteredCategorizedItems).map((category) => (
-        <Grid.Section key={category} title={category} subtitle={bookCount(filteredCategorizedItems[category].length)}>
-          {filteredCategorizedItems[category].map((item) => (
-            <Grid.Item
-              key={item.id}
-              content={getGridCover(item)}
-              title={item.volumeInfo.title}
-              subtitle={item.volumeInfo?.authors ? item.volumeInfo.authors[0] : "Various Authors"}
-              actions={
-                <ActionPanel>
-                  <BookActionSections item={item} gridActions={gridActions} />
-                </ActionPanel>
-              }
-            />
-          ))}
-        </Grid.Section>
-      ))}
-    </Grid>
-  );
-}
-
-export function FlatBookGrid({
-  categorizedItems,
-  filteredCategorizedItems,
-  totalCount,
-  activeFilter,
-  onFilterChange,
-  isLoading,
-  gridActions,
-}: GridProps) {
-  const items = Object.values(filteredCategorizedItems).flat();
-
-  return (
-    <Grid
-      columns={5}
-      aspectRatio="2/3"
-      fit={Grid.Fit.Fill}
-      navigationTitle="Book Covers"
-      isLoading={isLoading}
-      searchBarAccessory={
-        <CategoryDropdown
-          categorizedItems={categorizedItems}
-          totalCount={totalCount}
-          filter={activeFilter}
-          onFilterChange={onFilterChange}
-        />
-      }
-    >
-      {items.map((item) => (
-        <Grid.Item
-          key={item.id}
-          content={getGridCover(item)}
-          title={item.volumeInfo.title}
-          subtitle={item.volumeInfo?.authors ? item.volumeInfo.authors[0] : "Various Authors"}
-          actions={
-            <ActionPanel>
-              <BookActionSections item={item} gridActions={gridActions} />
-            </ActionPanel>
-          }
-        />
-      ))}
+      <Grid.EmptyView icon={Icon.Book} title="Search Google Books" description="Type a query to find books" />
+      {categorized
+        ? Object.keys(filteredCategorizedItems).map((category) => (
+            <Grid.Section
+              key={category}
+              title={category}
+              subtitle={bookCount(filteredCategorizedItems[category].length)}
+            >
+              {filteredCategorizedItems[category].map((item) => (
+                <BookGridItem
+                  key={item.id}
+                  item={item}
+                  viewMode={viewMode}
+                  onViewModeChange={onViewModeChange}
+                  onClearSearch={onClearSearch}
+                />
+              ))}
+            </Grid.Section>
+          ))
+        : Object.values(filteredCategorizedItems)
+            .flat()
+            .map((item) => (
+              <BookGridItem
+                key={item.id}
+                item={item}
+                viewMode={viewMode}
+                onViewModeChange={onViewModeChange}
+                onClearSearch={onClearSearch}
+              />
+            ))}
     </Grid>
   );
 }

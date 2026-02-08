@@ -1,13 +1,20 @@
 import type { GoogleBooksResponse, VolumeItem } from "../types/google-books.dt";
-import { useFetch } from "@raycast/utils";
-import { getPreferenceValues, showToast, Toast } from "@raycast/api";
-import { useRef, useState, useEffect } from "react";
+import { useCachedState, useFetch } from "@raycast/utils";
+import { getPreferenceValues, open, showToast, Toast } from "@raycast/api";
+import { useCallback, useRef, useState, useEffect } from "react";
 
 const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 const GOOGLE_CLOUD_CREDENTIALS_URL = "https://console.cloud.google.com/apis/credentials";
 const MAX_RESULTS = 40;
+const FIELDS = [
+  "items(id,volumeInfo(title,subtitle,authors,description,categories,",
+  "imageLinks/thumbnail,publisher,publishedDate,pageCount,",
+  "averageRating,ratingsCount,printType,language,maturityRating,",
+  "industryIdentifiers(type,identifier),infoLink),",
+  "saleInfo(retailPrice(amount,currencyCode),listPrice(amount,currencyCode),isEbook,buyLink))",
+].join("");
 
-type UseSearchReturn = { items: VolumeItem[]; loading: boolean };
+type UseSearchReturn = { items: VolumeItem[]; loading: boolean; clearCache: () => void };
 
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState(value);
@@ -26,6 +33,7 @@ function buildSearchUrl(query: string): string {
   const url = new URL(GOOGLE_BOOKS_API_URL);
   url.searchParams.set("q", query);
   url.searchParams.set("maxResults", MAX_RESULTS.toString());
+  url.searchParams.set("fields", FIELDS);
   if (apiKey) {
     url.searchParams.set("key", apiKey);
   }
@@ -34,6 +42,7 @@ function buildSearchUrl(query: string): string {
 
 function useSearch(query: string | undefined): UseSearchReturn {
   const debouncedQuery = useDebouncedValue(query, 300);
+  const [cachedResults, setCachedResults] = useCachedState<VolumeItem[]>("last-results", []);
 
   const { isLoading, data } = useFetch(buildSearchUrl(debouncedQuery ?? ""), {
     mapResult(result: GoogleBooksResponse) {
@@ -44,6 +53,9 @@ function useSearch(query: string | undefined): UseSearchReturn {
     initialData: [],
     keepPreviousData: true,
     execute: !!debouncedQuery,
+    onData(fetchedItems: VolumeItem[]) {
+      setCachedResults(fetchedItems);
+    },
     async onError(error: Error) {
       if (error.message.includes("Too Many Requests")) {
         await showToast({
@@ -52,15 +64,16 @@ function useSearch(query: string | undefined): UseSearchReturn {
           message: "Set a Google Books API key in extension preferences to avoid this.",
           primaryAction: {
             title: "How to Get an API Key",
-            onAction: () => {
-              import("@raycast/api").then(({ open }) => open(GOOGLE_CLOUD_CREDENTIALS_URL));
-            },
+            onAction: () => open(GOOGLE_CLOUD_CREDENTIALS_URL),
           },
         });
       }
     },
   });
-  return { loading: isLoading, items: data };
+
+  const clearCache = useCallback(() => setCachedResults([]), [setCachedResults]);
+  const items = data.length > 0 ? data : cachedResults;
+  return { loading: isLoading, items, clearCache };
 }
 
 export { useSearch };

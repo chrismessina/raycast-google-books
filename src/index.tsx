@@ -1,49 +1,38 @@
-import { Action, Icon, List } from "@raycast/api";
-import { useCachedState, useLocalStorage } from "@raycast/utils";
-import { useCallback, useState } from "react";
+import { Icon, List } from "@raycast/api";
+import { useCachedState } from "@raycast/utils";
+import { useCallback } from "react";
 import { useSearch } from "./hooks/useSearch";
 import { VolumeItem } from "./types/google-books.dt";
 import { bookCount } from "./utils/books";
 import { BookListItem } from "./views/BookListItem";
-import { CategorizedBookGrid, FlatBookGrid } from "./views/BookGrid";
+import { BookGrid } from "./views/BookGrid";
 import type { ViewMode } from "./views/BookGrid";
 
 export default function SearchGoogleBooks() {
   const [showDetail, setShowDetail] = useCachedState("show-detail", true);
   const [viewMode, setViewMode] = useCachedState<ViewMode>("view-mode", "list");
-  const {
-    value: lastSearch,
-    setValue: setLastSearch,
-    isLoading: isLoadingStorage,
-  } = useLocalStorage<string>("lastSearch", "");
-  const {
-    value: lastFilter,
-    setValue: setLastFilter,
-  } = useLocalStorage<string>("lastFilter", "");
-  const [searchText, setSearchText] = useState<string>();
-  const { items, loading } = useSearch(searchText ?? lastSearch);
-  const [filter, setFilter] = useState<string | undefined>(undefined);
+  const [searchText, setSearchText] = useCachedState<string>("lastSearch", "");
+  const [activeFilter, setActiveFilter] = useCachedState<string>("lastFilter", "");
+  const { items, loading, clearCache } = useSearch(searchText);
+  const isLoading = loading;
 
-  const activeFilter = filter ?? lastFilter ?? "";
-  const isLoading = loading || isLoadingStorage;
+  const toggleDetail = useCallback(() => {
+    setShowDetail((prev) => !prev);
+  }, [setShowDetail]);
 
   const handleSearchTextChange = useCallback(
     (text: string) => {
       setSearchText(text);
-      if (text) {
-        setLastSearch(text);
-      }
     },
-    [setLastSearch],
+    [setSearchText],
   );
 
-  const handleFilterChange = useCallback(
-    (value: string) => {
-      setFilter(value);
-      setLastFilter(value);
-    },
-    [setLastFilter],
-  );
+  const handleClearSearch = useCallback(() => {
+    setSearchText("");
+    setActiveFilter("");
+    clearCache();
+    setViewMode("list");
+  }, [setSearchText, setActiveFilter, clearCache, setViewMode]);
 
   const categorizedItems =
     items.reduce((acc: Record<string, VolumeItem[]>, item: VolumeItem) => {
@@ -61,59 +50,19 @@ export default function SearchGoogleBooks() {
 
   const totalCount = items.length;
 
-  const gridActions = (
-    <>
-      {viewMode !== "list" && (
-        <Action
-          icon={Icon.List}
-          title="View Book List"
-          shortcut={{ modifiers: ["cmd", "shift"], key: "l" }}
-          onAction={() => setViewMode("list")}
-        />
-      )}
-      {viewMode !== "categorized-grid" && (
-        <Action
-          icon={Icon.AppWindowGrid3x3}
-          title="Show Book Covers (Sorted)"
-          shortcut={{ modifiers: ["cmd", "shift"], key: "g" }}
-          onAction={() => setViewMode("categorized-grid")}
-        />
-      )}
-      {viewMode !== "grid" && (
-        <Action
-          icon={Icon.AppWindowGrid3x3}
-          title="Show Book Covers"
-          shortcut={{ modifiers: ["cmd", "shift"], key: "f" }}
-          onAction={() => setViewMode("grid")}
-        />
-      )}
-    </>
-  );
-
-  if (viewMode === "categorized-grid") {
+  if (viewMode === "categorized-grid" || viewMode === "grid") {
     return (
-      <CategorizedBookGrid
+      <BookGrid
         categorizedItems={categorizedItems}
         filteredCategorizedItems={filteredCategorizedItems}
         totalCount={totalCount}
         activeFilter={activeFilter}
-        onFilterChange={handleFilterChange}
+        onFilterChange={setActiveFilter}
         isLoading={isLoading}
-        gridActions={gridActions}
-      />
-    );
-  }
-
-  if (viewMode === "grid") {
-    return (
-      <FlatBookGrid
-        categorizedItems={categorizedItems}
-        filteredCategorizedItems={filteredCategorizedItems}
-        totalCount={totalCount}
-        activeFilter={activeFilter}
-        onFilterChange={handleFilterChange}
-        isLoading={isLoading}
-        gridActions={gridActions}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onClearSearch={handleClearSearch}
+        categorized={viewMode === "categorized-grid"}
       />
     );
   }
@@ -126,30 +75,34 @@ export default function SearchGoogleBooks() {
       navigationTitle="Search Google Books"
       isLoading={isLoading}
       onSearchTextChange={handleSearchTextChange}
-      searchText={searchText ?? lastSearch ?? ""}
+      searchText={searchText}
       searchBarAccessory={
-        <List.Dropdown tooltip="Category" value={activeFilter} onChange={handleFilterChange}>
+        <List.Dropdown tooltip="Category" value={activeFilter} onChange={setActiveFilter}>
           <List.Dropdown.Item title={`All (${totalCount})`} value="" />
-          {Object.keys(categorizedItems).sort((a, b) => a.localeCompare(b)).map((category) => (
-            <List.Dropdown.Item key={category} title={`${category} (${categorizedItems[category].length})`} value={category} />
-          ))}
+          {Object.keys(categorizedItems)
+            .sort((a, b) => a.localeCompare(b))
+            .map((category) => (
+              <List.Dropdown.Item
+                key={category}
+                title={`${category} (${categorizedItems[category].length})`}
+                value={category}
+              />
+            ))}
         </List.Dropdown>
       }
     >
-      {Object.keys(filteredCategorizedItems).map((category, catIndex) => (
-        <List.Section
-          key={category}
-          title={category}
-          subtitle={bookCount(filteredCategorizedItems[category].length)}
-        >
+      <List.EmptyView icon={Icon.Book} title="Search Google Books" description="Type a query to find books" />
+      {Object.keys(filteredCategorizedItems).map((category) => (
+        <List.Section key={category} title={category} subtitle={bookCount(filteredCategorizedItems[category].length)}>
           {filteredCategorizedItems[category].map((item) => (
             <BookListItem
               key={item.id}
               item={item}
-              catIndex={catIndex}
               showDetail={showDetail}
-              setShowDetail={setShowDetail}
-              gridActions={gridActions}
+              toggleDetail={toggleDetail}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onClearSearch={handleClearSearch}
             />
           ))}
         </List.Section>
