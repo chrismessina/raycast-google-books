@@ -94,7 +94,11 @@ export function BookListItem({
               )}
               <List.Item.Detail.Metadata.Separator />
               {(vi?.infoLink ?? item.selfLink) != null && (vi?.infoLink ?? item.selfLink) !== "" && (
-                <List.Item.Detail.Metadata.Link title="Google Books" text="Open" target={(vi?.infoLink ?? item.selfLink)!} />
+                <List.Item.Detail.Metadata.Link
+                  title="Google Books"
+                  text="Open"
+                  target={(vi?.infoLink ?? item.selfLink)!}
+                />
               )}
               {item.saleInfo?.buyLink != null && item.saleInfo.buyLink !== "" && (
                 <List.Item.Detail.Metadata.Link title="Buy" text="Purchase" target={item.saleInfo.buyLink} />
