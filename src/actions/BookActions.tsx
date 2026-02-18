@@ -21,7 +21,7 @@ export function BookActionSections({
   const hasCover = !!getLargeCover(item);
   const isbn = getISBN(item);
   const authors = item.volumeInfo?.authors?.join(", ");
-  const link = item.volumeInfo?.infoLink || item.selfLink;
+  const link = item.volumeInfo?.infoLink ?? item.selfLink;
 
   return (
     <>
@@ -50,6 +50,7 @@ export function BookActionSections({
         {isbn && (
           <Action.CopyToClipboard
             icon={Icon.BarCode}
+            // eslint-disable-next-line @raycast/prefer-title-case
             title="Copy ISBN"
             content={isbn}
             shortcut={{ modifiers: ["cmd", "shift"], key: "i" }}
