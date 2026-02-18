@@ -31,9 +31,8 @@ function BookGridItem({
 }) {
   return (
     <Grid.Item
-      key={item.id}
       content={getGridCover(item)}
-      title={item.volumeInfo.title}
+      title={item.volumeInfo?.title ?? "Untitled"}
       subtitle={item.volumeInfo?.authors ? item.volumeInfo.authors[0] : "Various Authors"}
       actions={
         <ActionPanel>

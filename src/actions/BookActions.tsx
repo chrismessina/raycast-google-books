@@ -50,8 +50,7 @@ export function BookActionSections({
         {isbn && (
           <Action.CopyToClipboard
             icon={Icon.BarCode}
-            // eslint-disable-next-line @raycast/prefer-title-case
-            title="Copy ISBN"
+            title="Copy ISBN" // eslint-disable-line @raycast/prefer-title-case
             content={isbn}
             shortcut={{ modifiers: ["cmd", "shift"], key: "i" }}
           />
