@@ -33,7 +33,7 @@ export function convertInfoToMarkdown(item: VolumeItem): string {
     "\n\n---\n\n" +
     (authors ? "*By " + authors + "*\n\n" : "") +
     // Chunk long text into paragraphs
-    (item.volumeInfo?.description ? item.volumeInfo.description.replace(/(.*?(?:\. |\? |! )){3}/g, "$&\n\n") : "")
+    (item.volumeInfo?.description?.replace(/(.*?(?:\. |\? |! )){3}/g, "$&\n\n") ?? "")
   );
 }
 
