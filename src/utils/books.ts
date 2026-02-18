@@ -25,15 +25,16 @@ export function getGridCover(item: VolumeItem): Image.ImageLike {
 }
 
 export function convertInfoToMarkdown(item: VolumeItem): string {
-  const authors = item.volumeInfo?.authors?.join(", ");
   return (
     "# " +
     (item.volumeInfo?.title ?? "") +
     (item.volumeInfo?.subtitle ? "\n\n**" + item.volumeInfo.subtitle + "**" : "") +
     "\n\n---\n\n" +
-    (authors ? "*By " + authors + "*\n\n" : "") +
+    "*By " +
+    (item.volumeInfo?.authors ? item.volumeInfo.authors.join(", ") : "") +
+    "*\n\n" +
     // Chunk long text into paragraphs
-    (item.volumeInfo?.description?.replace(/(.*?(?:\. |\? |! )){3}/g, "$&\n\n") ?? "")
+    (item.volumeInfo?.description ? item.volumeInfo.description.replace(/(.*?\. ){3}/g, "$&\n\n") : "")
   );
 }
 

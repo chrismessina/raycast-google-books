@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Action, ActionPanel, Clipboard, Detail, Icon, Keyboard, showInFinder, showToast, Toast } from "@raycast/api";
 import { VolumeItem } from "../types/google-books.dt";
 import { getLargeCover } from "../utils/books";
@@ -15,17 +14,14 @@ async function fetchCoverBuffer(url: string): Promise<Buffer> {
 }
 
 export function BookCover({ item }: { item: VolumeItem }) {
-  const [isDownloading, setIsDownloading] = useState(false);
   const cover = getLargeCover(item);
   const markdown = cover ? `# ![Cover](${cover})` : `# No cover available.`;
-  const link = item.volumeInfo?.infoLink || item.selfLink;
-  const safeName = (item.volumeInfo?.title || "cover").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 60);
+  const safeName = (item.volumeInfo?.title ?? "cover").replace(/[^a-zA-Z0-9]/g, "_").substring(0, 60);
 
   return (
     <Detail
       navigationTitle="Cover"
       markdown={markdown}
-      isLoading={isDownloading}
       actions={
         <ActionPanel>
           {cover && (
@@ -34,7 +30,6 @@ export function BookCover({ item }: { item: VolumeItem }) {
                 icon={Icon.Download}
                 title="Download Cover"
                 onAction={async () => {
-                  setIsDownloading(true);
                   try {
                     const buffer = await fetchCoverBuffer(cover);
                     const filePath = join(homedir(), "Downloads", `${safeName}_cover.jpg`);
@@ -54,8 +49,6 @@ export function BookCover({ item }: { item: VolumeItem }) {
                       title: "Download Failed",
                       message: "Could not download the cover image.",
                     });
-                  } finally {
-                    setIsDownloading(false);
                   }
                 }}
               />
@@ -64,7 +57,6 @@ export function BookCover({ item }: { item: VolumeItem }) {
                 title="Copy Cover"
                 shortcut={Keyboard.Shortcut.Common.Copy}
                 onAction={async () => {
-                  setIsDownloading(true);
                   try {
                     const buffer = await fetchCoverBuffer(cover);
                     const tempPath = join(tmpdir(), `raycast-google-books-${item.id}.jpg`);
@@ -80,8 +72,6 @@ export function BookCover({ item }: { item: VolumeItem }) {
                       title: "Copy Failed",
                       message: "Could not copy the cover image.",
                     });
-                  } finally {
-                    setIsDownloading(false);
                   }
                 }}
               />
@@ -93,9 +83,9 @@ export function BookCover({ item }: { item: VolumeItem }) {
               />
             </ActionPanel.Section>
           )}
-          {link && (
+          {(item.volumeInfo?.infoLink || item.selfLink) && (
             <ActionPanel.Section>
-              <Action.OpenInBrowser url={link} />
+              <Action.OpenInBrowser url={item.volumeInfo?.infoLink ?? item.selfLink} />
             </ActionPanel.Section>
           )}
         </ActionPanel>

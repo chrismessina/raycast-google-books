@@ -7,7 +7,7 @@ const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 const GOOGLE_CLOUD_CREDENTIALS_URL = "https://console.cloud.google.com/apis/credentials";
 const MAX_RESULTS = 40;
 const FIELDS = [
-  "items(id,selfLink,volumeInfo(title,subtitle,authors,description,categories,",
+  "items(id,volumeInfo(title,subtitle,authors,description,categories,",
   "imageLinks/thumbnail,publisher,publishedDate,pageCount,",
   "averageRating,ratingsCount,printType,language,maturityRating,",
   "industryIdentifiers(type,identifier),infoLink),",
@@ -52,7 +52,7 @@ function useSearch(query: string | undefined): UseSearchReturn {
         data: (result.items ?? []).filter((item) => item.volumeInfo?.title),
       };
     },
-    initialData: [] as VolumeItem[],
+    initialData: [],
     keepPreviousData: true,
     execute: !!debouncedQuery,
     onData(fetchedItems: VolumeItem[]) {
@@ -69,18 +69,12 @@ function useSearch(query: string | undefined): UseSearchReturn {
             onAction: () => open(GOOGLE_CLOUD_CREDENTIALS_URL),
           },
         });
-      } else {
-        await showToast({
-          style: Toast.Style.Failure,
-          title: "Search Failed",
-          message: error.message || "An error occurred while searching.",
-        });
       }
     },
   });
 
   const clearCache = useCallback(() => setCachedResults([]), [setCachedResults]);
-  const items = data !== undefined ? data : cachedResults;
+  const items = data.length > 0 ? data : cachedResults;
   return { loading: isLoading, items, clearCache };
 }
 
