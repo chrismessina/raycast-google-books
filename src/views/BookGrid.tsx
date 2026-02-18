@@ -83,36 +83,46 @@ export function BookGrid({
         </Grid.Dropdown>
       }
     >
-      <Grid.EmptyView icon={Icon.Book} title="Search Google Books" description="Type a query to find books" />
-      {categorized
-        ? Object.keys(filteredCategorizedItems).map((category) => (
-            <Grid.Section
-              key={category}
-              title={category}
-              subtitle={bookCount(filteredCategorizedItems[category].length)}
-            >
-              {filteredCategorizedItems[category].map((item) => (
-                <BookGridItem
-                  key={item.id}
-                  item={item}
-                  viewMode={viewMode}
-                  onViewModeChange={onViewModeChange}
-                  onClearSearch={onClearSearch}
-                />
-              ))}
-            </Grid.Section>
-          ))
-        : Object.values(filteredCategorizedItems)
-            .flat()
-            .map((item) => (
-              <BookGridItem
-                key={item.id}
-                item={item}
-                viewMode={viewMode}
-                onViewModeChange={onViewModeChange}
-                onClearSearch={onClearSearch}
-              />
-            ))}
+      {activeFilter && Object.keys(filteredCategorizedItems).length === 0 ? (
+        <Grid.EmptyView
+          icon={Icon.Book}
+          title="No Results"
+          description={`No books found in category "${activeFilter}"`}
+        />
+      ) : (
+        <>
+          <Grid.EmptyView icon={Icon.Book} title="Search Google Books" description="Type a query to find books" />
+          {categorized
+            ? Object.keys(filteredCategorizedItems).map((category) => (
+                <Grid.Section
+                  key={category}
+                  title={category}
+                  subtitle={bookCount(filteredCategorizedItems[category].length)}
+                >
+                  {filteredCategorizedItems[category].map((item) => (
+                    <BookGridItem
+                      key={item.id}
+                      item={item}
+                      viewMode={viewMode}
+                      onViewModeChange={onViewModeChange}
+                      onClearSearch={onClearSearch}
+                    />
+                  ))}
+                </Grid.Section>
+              ))
+            : Object.values(filteredCategorizedItems)
+                .flat()
+                .map((item) => (
+                  <BookGridItem
+                    key={item.id}
+                    item={item}
+                    viewMode={viewMode}
+                    onViewModeChange={onViewModeChange}
+                    onClearSearch={onClearSearch}
+                  />
+                ))}
+        </>
+      )}
     </Grid>
   );
 }

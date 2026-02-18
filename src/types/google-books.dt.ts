@@ -14,49 +14,49 @@ export interface VolumeItem {
   searchInfo?: SearchInfo;
 }
 interface VolumeInfo {
-  title: string;
+  title?: string;
   subtitle?: string;
   authors?: string[];
   publisher?: string;
-  publishedDate: string;
+  publishedDate?: string;
   description?: string;
   industryIdentifiers?: IndustryIdentifiersItem[];
-  readingModes: ReadingModes;
-  pageCount: number;
-  printType: string;
+  readingModes?: ReadingModes;
+  pageCount?: number;
+  printType?: string;
   categories?: string[];
   averageRating?: number;
   ratingsCount?: number;
-  maturityRating: string;
-  allowAnonLogging: boolean;
-  contentVersion: string;
+  maturityRating?: string;
+  allowAnonLogging?: boolean;
+  contentVersion?: string;
   panelizationSummary?: PanelizationSummary;
-  imageLinks: ImageLinks;
-  language: string;
-  previewLink: string;
-  infoLink: string;
-  canonicalVolumeLink: string;
+  imageLinks?: ImageLinks;
+  language?: string;
+  previewLink?: string;
+  infoLink?: string;
+  canonicalVolumeLink?: string;
 }
 interface IndustryIdentifiersItem {
   type: string;
   identifier: string;
 }
 interface ReadingModes {
-  text: boolean;
-  image: boolean;
+  text?: boolean;
+  image?: boolean;
 }
 interface PanelizationSummary {
   containsEpubBubbles: boolean;
   containsImageBubbles: boolean;
 }
 interface ImageLinks {
-  smallThumbnail: string;
-  thumbnail: string;
+  smallThumbnail?: string;
+  thumbnail?: string;
 }
 interface SaleInfo {
-  country: string;
-  saleability: string;
-  isEbook: boolean;
+  country?: string;
+  saleability?: string;
+  isEbook?: boolean;
   listPrice?: ListPrice;
   retailPrice?: RetailPrice;
   buyLink?: string;
@@ -64,12 +64,12 @@ interface SaleInfo {
 }
 interface ListPrice {
   amount?: number;
-  currencyCode: string;
+  currencyCode?: string;
   amountInMicros?: number;
 }
 interface RetailPrice {
   amount?: number;
-  currencyCode: string;
+  currencyCode?: string;
   amountInMicros?: number;
 }
 interface OffersItem {
@@ -99,5 +99,5 @@ interface Pdf {
   acsTokenLink?: string;
 }
 interface SearchInfo {
-  textSnippet: string;
+  textSnippet?: string;
 }

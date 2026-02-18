@@ -21,7 +21,7 @@ export function BookActionSections({
   const hasCover = !!getLargeCover(item);
   const isbn = getISBN(item);
   const authors = item.volumeInfo?.authors?.join(", ");
-  const link = item.volumeInfo?.infoLink ?? item.selfLink;
+  const link = item.volumeInfo?.infoLink || item.selfLink;
 
   return (
     <>

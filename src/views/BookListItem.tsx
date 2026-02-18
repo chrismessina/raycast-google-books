@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { ActionPanel, Color, Icon, List } from "@raycast/api";
 import { VolumeItem } from "../types/google-books.dt";
 import { formatPrice, getISBN, getMaskedImage } from "../utils/books";
@@ -22,6 +23,22 @@ export function BookListItem({
   const price = formatPrice(item);
   const isbn = getISBN(item);
   const vi = item.volumeInfo;
+  const link = vi?.infoLink || item.selfLink;
+
+  const accessories = useMemo(() => {
+    if (showDetail) return [];
+    return [
+      ...(vi?.publishedDate
+        ? [{ icon: { source: Icon.Calendar, tintColor: Color.SecondaryText }, text: vi.publishedDate }]
+        : []),
+      ...(vi?.averageRating
+        ? [{ icon: { source: Icon.Star, tintColor: Color.SecondaryText }, text: `${vi.averageRating}/5` }]
+        : []),
+      ...(vi?.pageCount
+        ? [{ icon: { source: Icon.Document, tintColor: Color.SecondaryText }, text: `${vi.pageCount}p` }]
+        : []),
+    ];
+  }, [vi?.publishedDate, vi?.averageRating, vi?.pageCount, showDetail]);
 
   return (
     <List.Item
@@ -29,21 +46,7 @@ export function BookListItem({
       icon={getMaskedImage(item)}
       title={vi?.title ?? "Untitled"}
       subtitle={showDetail ? "" : vi?.authors ? vi.authors[0] : "Various Authors"}
-      accessories={
-        showDetail
-          ? []
-          : [
-              ...(vi?.publishedDate
-                ? [{ icon: { source: Icon.Calendar, tintColor: Color.SecondaryText }, text: vi.publishedDate }]
-                : []),
-              ...(vi?.averageRating
-                ? [{ icon: { source: Icon.Star, tintColor: Color.SecondaryText }, text: `${vi.averageRating}/5` }]
-                : []),
-              ...(vi?.pageCount
-                ? [{ icon: { source: Icon.Document, tintColor: Color.SecondaryText }, text: `${vi.pageCount}p` }]
-                : []),
-            ]
-      }
+      accessories={accessories}
       detail={
         <List.Item.Detail
           metadata={
@@ -93,12 +96,8 @@ export function BookListItem({
                 </List.Item.Detail.Metadata.TagList>
               )}
               <List.Item.Detail.Metadata.Separator />
-              {(vi?.infoLink ?? item.selfLink) != null && (vi?.infoLink ?? item.selfLink) !== "" && (
-                <List.Item.Detail.Metadata.Link
-                  title="Google Books"
-                  text="Open"
-                  target={(vi?.infoLink ?? item.selfLink)!}
-                />
+              {link != null && link !== "" && (
+                <List.Item.Detail.Metadata.Link title="Google Books" text="Open" target={link} />
               )}
               {item.saleInfo?.buyLink != null && item.saleInfo.buyLink !== "" && (
                 <List.Item.Detail.Metadata.Link title="Buy" text="Purchase" target={item.saleInfo.buyLink} />
