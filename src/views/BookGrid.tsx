@@ -16,6 +16,8 @@ interface BookGridProps {
   onViewModeChange: (mode: ViewMode) => void;
   onClearSearch: () => void;
   categorized: boolean;
+  searchText?: string;
+  onSearchTextChange?: (text: string) => void;
 }
 
 function BookGridItem({
@@ -31,10 +33,9 @@ function BookGridItem({
 }) {
   return (
     <Grid.Item
-      key={item.id}
       content={getGridCover(item)}
-      title={item.volumeInfo.title}
-      subtitle={item.volumeInfo?.authors ? item.volumeInfo.authors[0] : "Various Authors"}
+      title={item.volumeInfo?.title ?? "Untitled"}
+      subtitle={item.volumeInfo?.authors?.[0] ?? "Various Authors"}
       actions={
         <ActionPanel>
           <BookActionSections
@@ -60,6 +61,8 @@ export function BookGrid({
   onViewModeChange,
   onClearSearch,
   categorized,
+  searchText,
+  onSearchTextChange,
 }: BookGridProps) {
   return (
     <Grid
@@ -68,6 +71,9 @@ export function BookGrid({
       fit={Grid.Fit.Fill}
       navigationTitle={categorized ? "Book Covers (Sorted)" : "Book Covers"}
       isLoading={isLoading}
+      searchText={searchText}
+      onSearchTextChange={onSearchTextChange}
+      searchBarPlaceholder="Search Google Books by keywords..."
       searchBarAccessory={
         <Grid.Dropdown tooltip="Category" value={activeFilter} onChange={onFilterChange}>
           <Grid.Dropdown.Item title={`All (${totalCount})`} value="" />
