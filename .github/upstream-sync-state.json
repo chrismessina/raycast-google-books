@@ -1,0 +1,31 @@
+{
+  "upstream_commit": "870667fc671801a467deb7c4c7fc72992efe3820",
+  "synced_at": "2026-09-03T01:44:53Z",
+  "files": {
+    ".gitignore": "29795479132c044eabe4d408daaaec0c4942b8c7",
+    ".prettierrc": "b7d51e04aa8d3cd8c5ae5c1c1d701bfee1e6c361",
+    "assets/book-cover-placeholder.png": "e6d626163335f7a586169b085d94ee328fed0a02",
+    "assets/google-books.png": "0dcb9f8db5c1e7a4ebef87267de649ce4ef8ec28",
+    "CHANGELOG.md": "d641b907d5460e1df7cfea1850cd10756f149f60",
+    "eslint.config.js": "50f86489f3b2d929d43469860699ca4ca5f86709",
+    "LICENSE": "3d27f1cfaba240b065ea62c1fcd3a42e65b7091c",
+    "metadata/google-books-1.png": "5b1c67fb01a9da85bb372bc6f5ead0ddda1bf5c8",
+    "metadata/google-books-2.png": "2e827158c9b8855198c8f2762cb6dde5be64b703",
+    "metadata/google-books-3.png": "fbe2dbe131f1b46c5af91a21babc734c21a47b2c",
+    "metadata/google-books-4.png": "ef44aaa5deda94d621b359bd1260175d8e921b74",
+    "package-lock.json": "4c0bad728fb008b1526177017595bfa49d86d1b6",
+    "package.json": "8808492d2de96af4661207993979ca89207f6d2a",
+    "README.md": "38c82dbb8549589877dcf1e2189263e25bf59103",
+    "src/actions/BookActions.tsx": "2d7259839990c46652e42b0144e12f5da96eeab5",
+    "src/hooks/useSearch.ts": "288572a88e0e0169b05e0e6759d89ee790ac05cf",
+    "src/index.tsx": "2b7d5f0b3819d3386b816372ea11c63dad659fe0",
+    "src/types/google-books.dt.ts": "331ef64bc0f364824fea4e22b1c26d1e57cd4e64",
+    "src/utils/books.ts": "b284705b10444c18b55583aa8700e6682d095660",
+    "src/views/BookCover.tsx": "1a59625c092f922bdab412cda0df95b750a0ef7b",
+    "src/views/BookDetail.tsx": "055cc7c1a83ddbbb64680140c156358639967cf7",
+    "src/views/BookGrid.tsx": "8a72a8dcb387d49971df88128c742a364a5f86a2",
+    "src/views/BookListItem.tsx": "4076999a12330c81c745d8a77d46dd438069041b",
+    "tests/google-books.http": "871fda0cc91d2a35a83ab38e8110030388db523a",
+    "tsconfig.json": "d33dd46c4812d02483f2ac2e7969afc30c10f355"
+  }
+}
