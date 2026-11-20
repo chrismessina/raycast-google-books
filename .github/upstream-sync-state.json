@@ -1,6 +1,6 @@
 {
-  "upstream_commit": "dccfc8877dd0e658295cb4b6d29b4a0a1b79baf8",
-  "synced_at": "2026-11-17T18:29:31Z",
+  "upstream_commit": "e38232e713cc42a58cac81b8d3af9261fd1624e5",
+  "synced_at": "2026-11-20T17:44:46Z",
   "files": {
     ".gitignore": "29795479132c044eabe4d408daaaec0c4942b8c7",
     ".prettierrc": "b7d51e04aa8d3cd8c5ae5c1c1d701bfee1e6c361",
@@ -14,7 +14,7 @@
     "metadata/google-books-2.png": "2e827158c9b8855198c8f2762cb6dde5be64b703",
     "metadata/google-books-3.png": "fbe2dbe131f1b46c5af91a21babc734c21a47b2c",
     "metadata/google-books-4.png": "ef44aaa5deda94d621b359bd1260175d8e921b74",
-    "package-lock.json": "9c03f473a2a8380a94963f897ebddc253195508b",
+    "package-lock.json": "64083c3a6562ba6b5ce6b8fe0cdaf2f85d1a7ae4",
     "package.json": "21a3f98dd98ed7332a0c4f391e26f37a5505941f",
     "src/actions/BookActions.tsx": "2d7259839990c46652e42b0144e12f5da96eeab5",
     "src/hooks/useSearch.ts": "288572a88e0e0169b05e0e6759d89ee790ac05cf",
